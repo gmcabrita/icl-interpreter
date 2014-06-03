@@ -8,8 +8,8 @@ import Lexer (alexScanTokens, Token (..))
 import Parser (parse)
 import Syntax
 import Semantics (eval_exp)
-
-import qualified Data.Map as M
+import qualified Memory as M
+import qualified Env as E
 
 grabLines' tokens' 0 = return tokens'
 grabLines' tokens' n =
@@ -59,5 +59,5 @@ main =
     --   (None, _)    -> putStr "Type Error\n"
     --   _            -> putStr $ show (eval_exp e [] Map.empty) ++"\n" -- Prints the return
 
-    putStr $ show (eval_exp e [] M.empty) ++ "\n"
+    putStr $ show (eval_exp e E.emptyEnv M.emptyMem) ++ "\n"
     main
