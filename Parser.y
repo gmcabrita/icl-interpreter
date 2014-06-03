@@ -144,7 +144,7 @@ Y :
 T :
       'int'                                         { IntType }
     | 'bool'                                        { BoolType }
-    | 'string'                                      { StringType }
+    | 'string'                                      { StrType }
     | '*' T                                         { RefType $2 }
     | 'fun' '(' W ')'                               { FunType $3 }
 ;

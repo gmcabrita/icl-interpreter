@@ -17,7 +17,7 @@ eval_exp (Str s) _ mem = (String s, mem)
 
 eval_exp (Id s) env mem =
   case find s env of
-    Just v -> (v, mem)
+    Just v  -> (v, mem)
     Nothing -> (Undefined, mem)
 
 eval_exp (Add e e') env mem =
@@ -155,7 +155,7 @@ eval_state :: ASTStatement -> Env Result -> Mem -> (Result, Mem)
 
 eval_state (Free e) env mem = (Boolean (True), mem'')
   where
-    (Reference ref, mem') = eval_exp e env mem
+    (Reference ref, mem') = c_eval e env mem
     mem'' = M.free ref mem'
 
 eval_state (Print e) env mem =
@@ -165,7 +165,7 @@ eval_state (Print e) env mem =
     String x    -> unsafePerformIO $ do { putStr x; return (Boolean True, mem') }
     _   -> (Boolean False, mem')
   where
-    (v, mem') = eval_exp e env mem
+    (v, mem') = c_eval e env mem
 
 eval_state (Println) env mem =
   unsafePerformIO $ do { putStrLn ""; return (Boolean True, mem) }
@@ -175,7 +175,7 @@ eval_state (Seq s s') env mem =
     Boolean True    -> eval_state s' env mem'
     _               -> (Boolean False, mem')
   where
-    (val, mem') = c_eval_state s env mem
+    (val, mem') = eval_state s env mem
 
 eval_state (SDecl decls s) env mem = eval_state s new_env new_mem
   where
@@ -189,7 +189,7 @@ eval_state (Assign e e') env mem =
   case c_eval e env mem of
     (Reference ref, mem') -> (Boolean True, mem''')
                               where
-                                (v, mem'') = eval_exp e' env mem'
+                                (v, mem'') = c_eval e' env mem'
                                 mem''' = M.set ref v mem''
     (_, mem')             -> (Boolean False, mem')
 
@@ -223,12 +223,4 @@ c_eval :: ASTExpression -> Env Result -> Mem -> (Result, Mem)
 c_eval e env mem  =
   case eval_exp e env mem of
     (Delay e' env', mem') -> c_eval e' env' mem'
-    (v, mem') -> (v, mem')
-
--- Concrete eval for state
-
-c_eval_state :: ASTStatement -> Env Result -> Mem -> (Result, Mem)
-c_eval_state s env mem  =
-  case eval_state s env mem of
-    (DelayState s' env', mem') -> c_eval_state s' env' mem'
     (v, mem') -> (v, mem')

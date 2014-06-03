@@ -49,14 +49,13 @@ data Result =
   | Reference Ref
   | Closure [String] ASTExpression (Env Result)
   | Delay ASTExpression (Env Result)
-  | DelayState ASTStatement (Env Result)
   | Undefined
   deriving(Eq,Show)
 
 data Type =
     IntType
   | BoolType
-  | StringType
+  | StrType
   | RefType Type
   | FunType [Type]
   | None
