@@ -20,4 +20,4 @@ get :: Ref -> Mem a -> a
 get = flip (M.!)
 
 free :: Ref -> Mem a -> Mem a
-free = undefined
+free = M.delete
