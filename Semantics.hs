@@ -159,23 +159,23 @@ eval_state (Free e) env mem = (Boolean (True), mem'')
     mem'' = M.free ref mem'
 
 eval_state (Print e) env mem =
-    case v of
-        Integer x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
-        Boolean x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
-        String x    -> unsafePerformIO $ do { putStr x; return (Boolean True, mem') }
-        _   -> (Boolean False, mem')
-    where
-        (v, mem') = eval_exp e env mem
+  case v of
+    Integer x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
+    Boolean x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
+    String x    -> unsafePerformIO $ do { putStr x; return (Boolean True, mem') }
+    _   -> (Boolean False, mem')
+  where
+    (v, mem') = eval_exp e env mem
 
 eval_state (Println) env mem =
-    unsafePerformIO $ do { putStrLn ""; return (Boolean True, mem) }
+  unsafePerformIO $ do { putStrLn ""; return (Boolean True, mem) }
 
 eval_state (Seq s s') env mem =
-    case val of
-        Boolean True    -> eval_state s' env mem'
-        _               -> (Boolean False, mem')
-    where
-        (val, mem') = c_eval_state s env mem
+  case val of
+    Boolean True    -> eval_state s' env mem'
+    _               -> (Boolean False, mem')
+  where
+    (val, mem') = c_eval_state s env mem
 
 eval_state (SDecl decls s) env mem = eval_state s new_env new_mem
   where
@@ -194,26 +194,26 @@ eval_state (Assign e e') env mem =
     (_, mem')             -> (Boolean False, mem')
 
 eval_state (IfElse e s s') env mem =
-    if cond
-        then eval_state s env mem'
-        else eval_state s' env mem'
-    where
-        (Boolean cond, mem') = c_eval e env mem
+  if cond
+    then eval_state s env mem'
+    else eval_state s' env mem'
+  where
+    (Boolean cond, mem') = c_eval e env mem
 
 eval_state (If e s) env mem =
-    if cond
-        then eval_state s env mem'
-        else (Boolean False, mem')
-    where
-        (Boolean cond, mem') = c_eval e env mem
+  if cond
+    then eval_state s env mem'
+    else (Boolean False, mem')
+  where
+    (Boolean cond, mem') = c_eval e env mem
 
 eval_state (While e s) env mem =
-    case cond of
-        Boolean True    -> eval_state (While e s) env (snd $ eval_state s env mem')
-        Boolean False   -> (Boolean True, mem')
-        _       -> (Boolean False, mem')
-    where
-        (cond, mem') = c_eval e env mem
+  case cond of
+    Boolean True    -> eval_state (While e s) env (snd $ eval_state s env mem')
+    Boolean False   -> (Boolean True, mem')
+    _       -> (Boolean False, mem')
+  where
+    (cond, mem') = c_eval e env mem
 
 eval_state (Call e args) env mem = eval_exp (Apply e args) env mem
 
