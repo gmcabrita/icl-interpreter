@@ -8,8 +8,8 @@ import qualified Memory as M
 num_typecheck :: ASTExpression -> ASTExpression -> Env Type -> Type
 num_typecheck e e' env =
   case (e'', e''') of
-    (IntType, IntType)  -> IntType
-    (_, _)              -> None
+    (IntType, IntType)  ->  IntType
+    (_, _)              ->  None
   where
     e''  = typecheck_exp e env
     e''' = typecheck_exp e' env
@@ -18,8 +18,8 @@ num_typecheck e e' env =
 bool_typecheck :: ASTExpression -> ASTExpression -> Env Type -> Type
 bool_typecheck e e' env =
   case (e'', e''') of
-    (BoolType, BoolType)    -> BoolType
-    (_, _)                  -> None
+    (BoolType, BoolType)  ->  BoolType
+    (_, _)                ->  None
   where
     e''  = typecheck_exp e env
     e''' = typecheck_exp e' env
@@ -37,8 +37,8 @@ typecheck_exp (VFalse) _ = BoolType
 typecheck_exp (Id _) [] = None
 typecheck_exp (Id s) env =
   case find s env of
-    Just v  -> v
-    Nothing -> None
+    Just v  ->  v
+    Nothing ->  None
 
 typecheck_exp (Add e e') env = num_typecheck e e' env
 typecheck_exp (Multiply e e') env = num_typecheck e e' env
@@ -62,10 +62,10 @@ typecheck_exp (Get e e') env = bool_typecheck e e' env
 
 typecheck_exp (Ternary e e' e'') env =
   case t of
-    BoolType -> if t' == t''
-                  then t'
-                else None
-    _        -> None
+    BoolType  ->  if t' == t''
+                    then t'
+                  else None
+    _         ->  None
   where
     t   = typecheck_exp e env
     t'  = typecheck_exp e' env
@@ -73,18 +73,18 @@ typecheck_exp (Ternary e e' e'') env =
 
 typecheck_exp (Alloc e) env =
   case typecheck_exp e env of
-    None  -> None
-    t     -> RefType t
+    None  ->  None
+    t     ->  RefType t
 
 typecheck_exp (Deref e) env =
   case typecheck_exp e env of
-    RefType t -> t
-    _         -> None
+    RefType t ->  t
+    _         ->  None
 
 typecheck_exp (LDecl decls s e) env =
   case t of
-    None -> None
-    _    -> typecheck_exp e new_env
+    None  ->  None
+    _     ->  typecheck_exp e new_env
   where
     env' = beginScope env
     new_env = foldl (\env (x, e') ->
@@ -100,13 +100,15 @@ typecheck_exp (Lambda args body) env =
   where
     env' = beginScope env
     new_env = foldl (\env (x, t) ->
-                    assoc x t env)
+                     assoc x t env)
               env' args
 
 typecheck_exp (Apply e args) env =
   case typecheck_exp e env of
     FunType d_args t  ->  if  length args == length d_args &&
-                              (foldl (\acc (x, y) -> (x == typecheck_exp y env) && acc) True (zip d_args args))
+                              (foldl (\acc (x, y) ->
+                                      (x == typecheck_exp y env) && acc)
+                              True (zip d_args args))
                             then t
                           else None
     _                 ->  None

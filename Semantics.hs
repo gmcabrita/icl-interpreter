@@ -17,37 +17,37 @@ eval_exp (Str s) _ mem = (String s, mem)
 
 eval_exp (Id s) env mem =
   case find s env of
-    Just v  -> (v, mem)
-    Nothing -> (Undefined, mem)
+    Just v  ->  (v, mem)
+    Nothing ->  (Undefined, mem)
 
 eval_exp (Add e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer n, Integer n') -> (Integer (n + n'), mem'')
-    _                       -> (Undefined, mem'')
+    (Integer n, Integer n') ->  (Integer (n + n'), mem'')
+    _                       ->  (Undefined, mem'')
 
 eval_exp (Multiply e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer n, Integer n') -> (Integer (n * n'), mem'')
-    _                       -> (Undefined, mem'')
+    (Integer n, Integer n') ->  (Integer (n * n'), mem'')
+    _                       ->  (Undefined, mem'')
 
 eval_exp (Subtract e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer n, Integer n') -> (Integer (n - n'), mem'')
-    _                       -> (Undefined, mem'')
+    (Integer n, Integer n') ->  (Integer (n - n'), mem'')
+    _                       ->  (Undefined, mem'')
 
 eval_exp (Divide e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer n, Integer n') -> (Integer (n `div` n'), mem'')
-    (Integer _, Integer 0)  -> (Undefined, mem'')
-    _                       -> (Undefined, mem'')
+    (Integer n, Integer n') ->  (Integer (n `div` n'), mem'')
+    (Integer _, Integer 0)  ->  (Undefined, mem'')
+    _                       ->  (Undefined, mem'')
 
 eval_exp (VTrue) _ mem = (Boolean True, mem)
 
@@ -57,64 +57,64 @@ eval_exp (And e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v,v') of
-    (Boolean n, Boolean n') -> (Boolean (n && n'), mem'')
-    _                       -> (Undefined,mem'')
+    (Boolean n, Boolean n') ->  (Boolean (n && n'), mem'')
+    _                       ->  (Undefined,mem'')
 
 eval_exp (Or e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Boolean n, Boolean n') -> (Boolean (n || n'), mem'')
-    _                       -> (Undefined,mem'')
+    (Boolean n, Boolean n') ->  (Boolean (n || n'), mem'')
+    _                       ->  (Undefined,mem'')
 
 eval_exp (Not e) env mem =
   let (v, mem') = c_eval e env mem in
   case v of
-    Boolean n -> (Boolean (not n), mem')
-    _         -> (Undefined, mem')
+    Boolean n ->  (Boolean (not n), mem')
+    _         ->  (Undefined, mem')
 
 eval_exp (Let e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer v, Integer v') -> (Boolean (v <= v'), mem'')
-    (_, _)                  -> (Undefined, mem'')
+    (Integer v, Integer v') ->  (Boolean (v <= v'), mem'')
+    (_, _)                  ->  (Undefined, mem'')
 
 eval_exp (Lt e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer v, Integer v') -> (Boolean (v < v'), mem'')
-    (_, _)                  -> (Undefined, mem'')
+    (Integer v, Integer v') ->  (Boolean (v < v'), mem'')
+    (_, _)                  ->  (Undefined, mem'')
 
 eval_exp (Gt e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer v, Integer v') -> (Boolean (v > v'), mem'')
-    (_, _)                  -> (Undefined, mem'')
+    (Integer v, Integer v') ->  (Boolean (v > v'), mem'')
+    (_, _)                  ->  (Undefined, mem'')
 
 eval_exp (Get e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Integer v, Integer v') -> (Boolean (v >= v'), mem'')
-    (_, _)                  -> (Undefined, mem'')
+    (Integer v, Integer v') ->  (Boolean (v >= v'), mem'')
+    (_, _)                  ->  (Undefined, mem'')
 
 eval_exp (Eq e e') env mem =
   let (v, mem') = c_eval e env mem in
   let (v', mem'') = c_eval e' env mem' in
   case (v, v') of
-    (Undefined, _) -> (Undefined, mem'')
-    (_, Undefined) -> (Undefined, mem'')
-    (v, v') -> (Boolean (v == v'), mem'')
+    (Undefined, _)  ->  (Undefined, mem'')
+    (_, Undefined)  ->  (Undefined, mem'')
+    (v, v')         ->  (Boolean (v == v'), mem'')
 
 eval_exp (Ternary e e' e'') env mem =
   let (v, mem') = c_eval e env mem in
   case v of
-    Boolean b | b == True -> eval_exp e' env mem'
-    Boolean b -> eval_exp e'' env mem'
-    _ -> (Undefined, mem')
+    Boolean b | b == True ->  eval_exp e' env mem'
+    Boolean b             ->  eval_exp e'' env mem'
+    _                     ->  (Undefined, mem')
 
 eval_exp (Alloc e) env mem = (Reference ref, mem'')
   where
@@ -128,17 +128,17 @@ eval_exp (Deref e) env mem = (M.get ref mem', mem')
 eval_exp (LDecl decls s e) env mem = eval_exp e new_env mem''
   where
     env' = beginScope env
-    (new_env, new_mem) = foldl (\(env', mem') (x, e') ->
-                                let (m1, m2) = eval_exp e' env' mem' in
-                                ((assoc x m1 env'), m2))
-                        (env', mem) decls
+    (new_env, new_mem) =  foldl (\(env', mem') (x, e') ->
+                                 let (m1, m2) = eval_exp e' env' mem' in
+                                 ((assoc x m1 env'), m2))
+                          (env', mem) decls
     (_, mem'') = eval_state s new_env new_mem
 
 eval_exp (Lambda args body) env mem = ((Closure (map fst args) body env), mem)
 
 eval_exp (Apply e args) env mem =
   case c_eval e env mem of
-    (Closure d_args e'' env', mem') -> eval_exp e'' new_env new_mem
+    (Closure d_args e'' env', mem') ->  eval_exp e'' new_env new_mem
                                         where
                                           env'' = beginScope env'
                                           (new_env, new_mem) =
@@ -146,7 +146,7 @@ eval_exp (Apply e args) env mem =
                                                    let (m1, m2) = (Delay e' env', mem') in
                                                    ((assoc x m1 env'), m2))
                                             (env'', mem') (zip d_args args)
-    (_, mem')                       -> (Undefined, mem')
+    (_, mem')                       ->  (Undefined, mem')
 
 
 -- State eval function
@@ -160,10 +160,10 @@ eval_state (Free e) env mem = (Boolean (True), mem'')
 
 eval_state (Print e) env mem =
   case v of
-    Integer x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
-    Boolean x   -> unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
-    String x    -> unsafePerformIO $ do { putStr x; return (Boolean True, mem') }
-    _   -> (Boolean False, mem')
+    Integer x ->  unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
+    Boolean x ->  unsafePerformIO $ do { putStr $ show x; return (Boolean True, mem') }
+    String x  ->  unsafePerformIO $ do { putStr x; return (Boolean True, mem') }
+    _         ->  (Boolean False, mem')
   where
     (v, mem') = c_eval e env mem
 
@@ -172,18 +172,18 @@ eval_state (Println) env mem =
 
 eval_state (Seq s s') env mem =
   case val of
-    Boolean True    -> eval_state s' env mem'
-    _               -> (Boolean False, mem')
+    Boolean True  ->  eval_state s' env mem'
+    _             ->  (Boolean False, mem')
   where
     (val, mem') = eval_state s env mem
 
 eval_state (SDecl decls s) env mem = eval_state s new_env new_mem
   where
     env' = beginScope env
-    (new_env, new_mem) = foldl (\(env', mem') (x, e') ->
-                                let (m1, m2) = eval_exp e' env' mem' in
-                                ((assoc x m1 env'), m2))
-                        (env', mem) decls
+    (new_env, new_mem) =  foldl (\(env', mem') (x, e') ->
+                                 let (m1, m2) = eval_exp e' env' mem' in
+                                 ((assoc x m1 env'), m2))
+                          (env', mem) decls
 
 eval_state (Assign e e') env mem =
   case c_eval e env mem of
@@ -209,9 +209,9 @@ eval_state (If e s) env mem =
 
 eval_state (While e s) env mem =
   case cond of
-    Boolean True    -> eval_state (While e s) env (snd $ eval_state s env mem')
-    Boolean False   -> (Boolean True, mem')
-    _       -> (Boolean False, mem')
+    Boolean True  ->  eval_state (While e s) env (snd $ eval_state s env mem')
+    Boolean False ->  (Boolean True, mem')
+    _             ->  (Boolean False, mem')
   where
     (cond, mem') = c_eval e env mem
 
@@ -222,5 +222,5 @@ eval_state (Call e args) env mem = eval_exp (Apply e args) env mem
 c_eval :: ASTExpression -> Env Result -> Mem -> (Result, Mem)
 c_eval e env mem  =
   case eval_exp e env mem of
-    (Delay e' env', mem') -> c_eval e' env' mem'
-    (v, mem') -> (v, mem')
+    (Delay e' env', mem') ->  c_eval e' env' mem'
+    (v, mem')             ->  (v, mem')
