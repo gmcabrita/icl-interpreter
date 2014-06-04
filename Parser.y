@@ -146,7 +146,7 @@ T :
     | 'bool'                                        { BoolType }
     | 'string'                                      { StrType }
     | '*' T                                         { RefType $2 }
-    | 'fun' '(' W ')'                               { FunType $3 }
+    | 'fun' '(' W ')'                               { FunType (init $3) (last $3) }
 ;
 
 --TS :

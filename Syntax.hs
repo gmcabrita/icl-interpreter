@@ -57,6 +57,6 @@ data Type =
   | BoolType
   | StrType
   | RefType Type
-  | FunType [Type]
+  | FunType [Type] Type
   | None
   deriving(Eq,Show)
