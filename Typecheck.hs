@@ -24,6 +24,15 @@ bool_typecheck e e' env =
     e''  = typecheck_exp e env
     e''' = typecheck_exp e' env
 
+num_bool_typecheck :: ASTExpression -> ASTExpression -> Env Type -> Type
+num_bool_typecheck e e' env =
+  case (e'', e''') of
+    (IntType, IntType)  ->  BoolType
+    (_, _)                ->  None
+  where
+    e''  = typecheck_exp e env
+    e''' = typecheck_exp e' env
+
 
 typecheck_exp :: ASTExpression -> Env Type -> Type
 
@@ -54,11 +63,19 @@ typecheck_exp (Not e) env =
   where
     e' = typecheck_exp e env
 
-typecheck_exp (Eq e e') env = bool_typecheck e e' env
-typecheck_exp (Let e e') env = bool_typecheck e e' env
-typecheck_exp (Lt e e') env = bool_typecheck e e' env
-typecheck_exp (Gt e e') env = bool_typecheck e e' env
-typecheck_exp (Get e e') env = bool_typecheck e e' env
+typecheck_exp (Eq e e') env =
+  case (e'', e''') of
+    (BoolType, BoolType)  ->  BoolType
+    (IntType, IntType)    ->  BoolType
+    (_, _)                ->  None
+  where
+    e''  = typecheck_exp e env
+    e''' = typecheck_exp e' env
+
+typecheck_exp (Let e e') env = num_bool_typecheck e e' env
+typecheck_exp (Lt e e') env = num_bool_typecheck e e' env
+typecheck_exp (Gt e e') env = num_bool_typecheck e e' env
+typecheck_exp (Get e e') env = num_bool_typecheck e e' env
 
 typecheck_exp (Ternary e e' e'') env =
   case t of
