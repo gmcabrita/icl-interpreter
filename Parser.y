@@ -50,21 +50,27 @@ import Syntax
     'int'       { TokenInt }
     'bool'      { TokenBool }
     'string'    { TokenString }
+    '@'         { TokenAt }
+    'for'       { TokenFor }
+    '.'         { TokenDot }
+    '['         { TokenLSquareBracket }
+    ']'         { TokenRSquareBracket }
 
-%nonassoc '>' '<' '>=' '<=' '=='
 %left ';'
 %left '(' ')'
+%left '[' ']' '@'
 %right '?' ':'
 %left 'if' 'else'
-%left '/'
-%left '+' '-'
-%left '<' '<='
-%left '>' '>='
 %left '=='
 %left 'and'
 %left 'or'
 %left 'not'
+%left '<' '<='
+%left '>' '>='
+%left '/'
+%left '+' '-'
 %left '*' id
+%left '.' label
 %%
 
 Start :
@@ -82,6 +88,8 @@ S :
     | 'print' '(' E ')'                             { Print $3 }
     | 'println' '(' ')'                             { Println }
     | 'free' '(' E ')'                              { Free $3 }
+    | 'for' '(' id ':' E ')' B                      { For $3 $5 $7 }
+    | 'for' '(' id ':' E ',' E ')' B                { ForFilter $3 $5 $7 $9 }
 ;
 
 E :
@@ -106,14 +114,19 @@ E :
     | E 'or' E                                      { Or $1 $3 }
     | 'not' E                                       { Not $2 }
     | E '?' E ':' E                                 { Ternary $1 $3 $5 }
-    | '(' E ')'                                     { $2 }
     | 'alloc' '(' E ')'                             { Alloc $3 }
     | '*' E                                         { Deref $2 }
+    | '{' FS '}'                                    { Object $2 }
+    | E '.' id                                      { Select $1 $3 }
+    | '[' ES ']'                                    { ListDecl $2 }
+    | E '[' E ']'                                   { ListSelect $1 $3 }
+    | E '@' E                                       { ListConcat $1 $3 }
+    | '(' E ')'                                     { $2 }
 ;
 
 D :
-      'val' id '=' E ';' D                          { ($2,$4):$6 }
-    | 'function' id '(' PS ')' B D                  { ($2,(Lambda $4 $6)):$7 }
+      'val' id '=' E ';' D                          { ($2, $4):$6 }
+    | 'function' id '(' PS ')' B D                  { ($2, (Lambda $4 $6)):$7 }
     |                                               { [] }
 ;
 
@@ -149,14 +162,19 @@ T :
     | 'fun' '(' W ')'                               { FunType (init $3) (last $3) }
 ;
 
---TS :
---                                                    { [] }
---    | W                                             { $1 }
---;
-
 W :
       T                                             { $1:[] }
     | T ',' W                                       { $1:$3 }
+;
+
+FS :
+                                                    { [] }
+    | Z                                             { $1 }
+;
+
+Z :
+      id ':' E                                   { [($1, $3)] }
+    | id ':' E ',' Z                             { ($1, $3):$5 }
 ;
 
 {

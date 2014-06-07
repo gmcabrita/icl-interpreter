@@ -59,5 +59,4 @@ main =
   case typecheck_exp e E.emptyEnv of
     None    -> putStr "Type Error\n"
     _       -> putStr $ show (eval_exp e E.emptyEnv M.emptyMem) ++"\n"
-
   main

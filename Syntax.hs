@@ -27,6 +27,11 @@ data ASTExpression =
   | Ternary ASTExpression ASTExpression ASTExpression
   | Alloc ASTExpression
   | LDecl [(String, ASTExpression)] ASTStatement ASTExpression
+  | Object [(String, ASTExpression)]
+  | Select ASTExpression String
+  | ListDecl [ASTExpression]
+  | ListSelect ASTExpression ASTExpression
+  | ListConcat ASTExpression ASTExpression
   deriving(Eq,Show)
 
 data ASTStatement =
@@ -40,6 +45,8 @@ data ASTStatement =
   | Print ASTExpression
   | Println
   | SDecl [(String, ASTExpression)] ASTStatement
+  | For String ASTExpression ASTExpression
+  | ForFilter String ASTExpression ASTExpression ASTExpression
   deriving (Eq,Show)
 
 data Result =
@@ -49,6 +56,8 @@ data Result =
   | Reference Ref
   | Closure [String] ASTExpression (Env Result)
   | Delay ASTExpression (Env Result)
+  | ObjectR [(String, Result)]
+  | List [Result]
   | Undefined
   deriving(Eq,Show)
 
@@ -58,5 +67,7 @@ data Type =
   | StrType
   | RefType Type
   | FunType [Type] Type
+  | ObjType [(String, Type)]
+  | ListType Type
   | None
   deriving(Eq,Show)

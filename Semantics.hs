@@ -112,9 +112,9 @@ eval_exp (Eq e e') env mem =
 eval_exp (Ternary e e' e'') env mem =
   let (v, mem') = c_eval e env mem in
   case v of
-    Boolean b | b == True ->  eval_exp e' env mem'
-    Boolean b             ->  eval_exp e'' env mem'
-    _                     ->  (Undefined, mem')
+    Boolean b | b ->  eval_exp e' env mem'
+    Boolean b     ->  eval_exp e'' env mem'
+    _             ->  (Undefined, mem')
 
 eval_exp (Alloc e) env mem = (Reference ref, mem'')
   where
@@ -130,11 +130,11 @@ eval_exp (LDecl decls s e) env mem = eval_exp e new_env mem''
     env' = beginScope env
     (new_env, new_mem) =  foldl (\(env', mem') (x, e') ->
                                  let (m1, m2) = eval_exp e' env' mem' in
-                                 ((assoc x m1 env'), m2))
+                                 (assoc x m1 env', m2))
                           (env', mem) decls
     (_, mem'') = eval_state s new_env new_mem
 
-eval_exp (Lambda args body) env mem = ((Closure (map fst args) body env), mem)
+eval_exp (Lambda args body) env mem = (Closure (map fst args) body env, mem)
 
 eval_exp (Apply e args) env mem =
   case c_eval e env mem of
@@ -144,16 +144,52 @@ eval_exp (Apply e args) env mem =
                                           (new_env, new_mem) =
                                             foldl (\(env', mem') (x, e') ->
                                                    let (m1, m2) = (Delay e' env', mem') in
-                                                   ((assoc x m1 env'), m2))
+                                                   (assoc x m1 env', m2))
                                             (env'', mem') (zip d_args args)
     (_, mem')                       ->  (Undefined, mem')
 
+eval_exp (Object fields) env mem =
+  if Undefined `elem` results
+    then (Undefined,mem)
+  else (object, mem)
+  where
+    object = ObjectR $ zip labels results
+    results = map (\e -> fst $ eval_exp e envr mem) fieldExps
+    envr = assoc "this" object $ beginScope env
+    (labels,fieldExps) = unzip fields
+
+eval_exp (Select e label) env mem =
+  case c_eval e env mem of
+    (ObjectR fields,mem') ->  (head [ v | (l,v) <- fields, l == label], mem')
+    (_,mem')              ->  (Undefined,mem')
+
+eval_exp (ListDecl es) env mem = (list, mem)
+  where
+    list = List elements
+    elements = map (\e -> fst $ eval_exp e env mem) es
+
+eval_exp (ListSelect e e') env mem =
+  if pos >= 0 && pos < len
+    then (list !! pos, mem'')
+  else (Undefined, mem'')
+  where
+    (List list, mem') = c_eval e env mem
+    (Integer pos, mem'') = c_eval e' env mem'
+    len = length list
+
+eval_exp (ListConcat e e') env mem =
+  case (v, v') of
+    (List l, List l') ->  (List (l ++ l'), mem'')
+    (_, _)            ->  (Undefined, mem'')
+  where
+    (v, mem') = c_eval e env mem
+    (v', mem'') = c_eval e' env mem'
 
 -- State eval function
 
 eval_state :: ASTStatement -> Env Result -> Mem -> (Result, Mem)
 
-eval_state (Free e) env mem = (Boolean (True), mem'')
+eval_state (Free e) env mem = (Boolean True, mem'')
   where
     (Reference ref, mem') = c_eval e env mem
     mem'' = M.free ref mem'
@@ -182,7 +218,7 @@ eval_state (SDecl decls s) env mem = eval_state s new_env new_mem
     env' = beginScope env
     (new_env, new_mem) =  foldl (\(env', mem') (x, e') ->
                                  let (m1, m2) = eval_exp e' env' mem' in
-                                 ((assoc x m1 env'), m2))
+                                 (assoc x m1 env', m2))
                           (env', mem) decls
 
 eval_state (Assign e e') env mem =
@@ -216,6 +252,58 @@ eval_state (While e s) env mem =
     (cond, mem') = c_eval e env mem
 
 eval_state (Call e args) env mem = eval_exp (Apply e args) env mem
+
+eval_state (For s e e') env mem =
+  (Boolean True, mem'')
+  where
+    new_env = beginScope env
+    (List list, mem') = c_eval e env mem
+    (_, mem'')  = foldr (\x (env, mem) ->
+                          let new_env = assoc s x env in
+                          (new_env, snd $ eval_exp e' new_env mem))
+                  (new_env, mem') list
+
+eval_state (ForFilter s e e' e'') env mem =
+  (Boolean True, mem'')
+  where
+    new_env = beginScope env
+    (List list, mem') = c_eval e env mem
+    (_, mem'')  = foldr (\x (env, mem) ->
+                          let new_env = assoc s x env in
+                          let (Boolean filter, mem') = c_eval e' new_env mem in
+                          if filter
+                            then (new_env, snd $ eval_exp e'' new_env mem)
+                          else (new_env, mem'))
+                  (new_env, mem') list
+
+for s list e' env mem =
+  case list of
+    []    ->  (Undefined, mem)
+    [x]   ->  eval_exp e' new_env mem
+              where
+                new_env = assoc s x env
+    x:xs  ->  for s xs e' new_env mem'
+              where
+                new_env = assoc s x env
+                (_, mem') = eval_exp e' new_env mem
+
+for_filter s list e' e'' env mem =
+    case list of
+    []    ->  (Undefined, mem)
+    [x]   ->  if filter
+                then eval_exp e' new_env mem'
+              else (Undefined, mem')
+              where
+                new_env = assoc s x env
+                (Boolean filter, mem') = c_eval e'' new_env mem
+    x:xs  ->  for_filter s xs e' e'' new_env mem''
+              where
+                new_env = assoc s x env
+                (Boolean filter, mem') = c_eval e'' new_env mem
+                (_, mem'') =  if filter
+                                then eval_exp e' new_env mem'
+                              else (Undefined, mem')
+
 
 -- Concrete eval
 

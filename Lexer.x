@@ -52,6 +52,11 @@ tokens :-
   int                       { \_ -> TokenInt }
   bool                      { \_ -> TokenBool }
   string                    { \_ -> TokenString }
+  \@                        { \_ -> TokenAt }
+  for                       { \_ -> TokenFor }
+  \.                        { \_ -> TokenDot }
+  \[                        { \_ -> TokenLSquareBracket }
+  \]                        { \_ -> TokenRSquareBracket }
   $alpha $alphanum*         { \s -> TokenId s }
   \" $alphanum* \"          { \s -> TokenStr $ init $ tail s }
 
@@ -101,6 +106,11 @@ data Token =
   | TokenInt
   | TokenBool
   | TokenString
+  | TokenAt
+  | TokenFor
+  | TokenDot
+  | TokenLSquareBracket
+  | TokenRSquareBracket
   deriving (Eq, Show )
 
 }
