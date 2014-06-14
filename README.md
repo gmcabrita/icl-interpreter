@@ -6,8 +6,7 @@
 
 * Object searching operations
 
-# Examples
-## Core language
+# Core language
 
     {
       val x = alloc(1);
@@ -56,7 +55,7 @@ Passing functions as arguments,
 
     }
 
-## Basic objects
+# Basic objects
 
     {
       val x = {
@@ -80,7 +79,7 @@ Passing functions as arguments,
       return 1;
     }
 
-## Object filtering
+# Object filtering
 
     {
       val x = {
