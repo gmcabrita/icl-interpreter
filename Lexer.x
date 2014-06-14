@@ -13,7 +13,6 @@ $nl    = [\n\r]             -- newline
 tokens :-
 
   $nl+                      ;--{ skip }
-  $white+                   ;
   $digit+                   { \s -> TokenNum (read s) }
   while                     { \_ -> TokenWhile }
   \{                        { \_ -> TokenLBracket }
@@ -58,7 +57,8 @@ tokens :-
   \[                        { \_ -> TokenLSquareBracket }
   \]                        { \_ -> TokenRSquareBracket }
   $alpha $alphanum*         { \s -> TokenId s }
-  \" $alphanum* \"          { \s -> TokenStr $ init $ tail s }
+  \" [$alphanum $white]* \" { \s -> TokenStr $ init $ tail s }
+  $white+                   ;
 
 
 
